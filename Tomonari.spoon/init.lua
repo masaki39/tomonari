@@ -19,7 +19,6 @@ obj._currentPackName = nil
 obj._currentSounds   = nil
 obj._volume          = 1.0
 obj._pressedKeys     = {}
-obj._initialized     = false
 
 local SPECIAL_KEYCODES = { [49] = "SPACE", [36] = "ENTER", [51] = "BACKSPACE" }
 
@@ -51,22 +50,30 @@ function obj:_loadPackSounds(packDir)
 	return sounds
 end
 
+function obj:_applyVolume()
+	if not self._currentSounds then return end
+	for _, s in ipairs(self._currentSounds.generics) do s:volume(self._volume) end
+	for _, s in pairs(self._currentSounds.special)  do s:volume(self._volume) end
+end
+
 function obj:_activatePack(packName)
 	local packDir = self._packs[packName]
 	if not packDir then return end
 	self._currentPackName = packName
 	self._currentSounds   = self:_loadPackSounds(packDir)
+	self:_applyVolume()
 	hs.settings.set("Tomonari.pack", packName)
 	hs.alert("Tomonari: " .. packName)
 end
 
 function obj:_play(sound)
-	if sound then sound:volume(self._volume):stop():play() end
+	if sound then sound:stop():play() end
 end
 
 function obj:setVolume(vol)
 	self._volume = math.max(0.0, math.min(1.0, vol))
 	hs.settings.set("Tomonari.volume", self._volume)
+	self:_applyVolume()
 	hs.alert(string.format("Tomonari: Volume %d%%", math.floor(self._volume * 100 + 0.5)))
 end
 
@@ -130,16 +137,15 @@ function obj:selectPack()
 	chooser:show()
 end
 
-function obj:start()
-	if not self._initialized then
-		self:_discoverPacks()
-		self._volume = hs.settings.get("Tomonari.volume") or 1.0
-		local saved  = hs.settings.get("Tomonari.pack")
-		local pack   = (saved and self._packs[saved]) and saved or next(self._packs)
-		if pack then self:_activatePack(pack) end
-		self._initialized = true
-	end
+function obj:init()
+	self:_discoverPacks()
+	self._volume = hs.settings.get("Tomonari.volume") or 1.0
+	local saved  = hs.settings.get("Tomonari.pack")
+	local pack   = (saved and self._packs[saved]) and saved or next(self._packs)
+	if pack then self:_activatePack(pack) end
+end
 
+function obj:start()
 	if not self._menubar then
 		self._menubar = hs.menubar.new()
 		self._menubar:setTitle("⌨")
