@@ -8,8 +8,8 @@
     "Method": [
       {
         "def": "Tomonari:start()",
-        "desc": "Load sounds and start the eventtap.",
-        "doc": "Load sounds and start the eventtap.\n\nReturns:\n * The Tomonari object",
+        "desc": "Load sounds, create menu bar icon, and start the eventtap.",
+        "doc": "Load sounds, create menu bar icon, and start the eventtap.\n\nReturns:\n * The Tomonari object",
         "name": "start",
         "parameters": [],
         "returns": ["* The Tomonari object"],
@@ -19,8 +19,8 @@
       },
       {
         "def": "Tomonari:stop()",
-        "desc": "Stop the eventtap.",
-        "doc": "Stop the eventtap.\n\nReturns:\n * The Tomonari object",
+        "desc": "Stop the eventtap. The menu bar icon remains visible.",
+        "doc": "Stop the eventtap. The menu bar icon remains visible and can be used to re-enable.\n\nReturns:\n * The Tomonari object",
         "name": "stop",
         "parameters": [],
         "returns": ["* The Tomonari object"],
@@ -29,11 +29,35 @@
         "type": "Method"
       },
       {
+        "def": "Tomonari:setVolume(vol)",
+        "desc": "Set playback volume.",
+        "doc": "Set playback volume.\n\nParameters:\n * vol - A number between 0.0 (silent) and 1.0 (full volume)\n\nReturns:\n * The Tomonari object",
+        "name": "setVolume",
+        "parameters": ["* vol - A number between 0.0 (silent) and 1.0 (full volume)"],
+        "returns": ["* The Tomonari object"],
+        "signature": "Tomonari:setVolume(vol)",
+        "stripped_doc": "",
+        "type": "Method"
+      },
+      {
+        "def": "Tomonari:selectPack()",
+        "desc": "Open a chooser UI to switch the active sound pack.",
+        "doc": "Open a chooser UI to switch the active sound pack.\n\nReturns:\n * The Tomonari object",
+        "name": "selectPack",
+        "parameters": [],
+        "returns": ["* The Tomonari object"],
+        "signature": "Tomonari:selectPack()",
+        "stripped_doc": "",
+        "type": "Method"
+      },
+      {
         "def": "Tomonari:bindHotkeys(map)",
-        "desc": "Bind hotkeys for toggling sound on/off.",
-        "doc": "Bind hotkeys for toggling sound on/off.\n\nParameters:\n * map - A table with optional key `toggle` = {mods, key}\n\nReturns:\n * The Tomonari object",
+        "desc": "Bind hotkeys for controlling Tomonari.",
+        "doc": "Bind hotkeys for controlling Tomonari.\n\nParameters:\n * map - A table with optional keys:\n   * toggle     = {mods, key} — enable/disable sound\n   * selectPack = {mods, key} — open pack chooser\n   * volumeUp   = {mods, key} — increase volume by 10%\n   * volumeDown = {mods, key} — decrease volume by 10%\n\nReturns:\n * The Tomonari object",
         "name": "bindHotkeys",
-        "parameters": ["* map - Table with optional key `toggle` = {mods, key}"],
+        "parameters": [
+          "* map - Table with optional keys: toggle, selectPack, volumeUp, volumeDown"
+        ],
         "returns": ["* The Tomonari object"],
         "signature": "Tomonari:bindHotkeys(map)",
         "stripped_doc": "",
@@ -42,7 +66,7 @@
     ],
     "Variable": [],
     "desc": "Keyboard typing sound feedback for Hammerspoon",
-    "doc": "Keyboard typing sound feedback for Hammerspoon. Plays mechanical keyboard sounds on every keystroke.",
+    "doc": "Keyboard typing sound feedback for Hammerspoon. Plays mechanical keyboard sounds on every keystroke. Includes a menu bar icon for pack switching and volume control.",
     "items": [],
     "name": "Tomonari",
     "plist": [],

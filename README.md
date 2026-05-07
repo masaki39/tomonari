@@ -1,7 +1,24 @@
 # Tomonari.spoon
 
-Keyboard typing sound feedback for [Hammerspoon](https://www.hammerspoon.org/).
-Plays mechanical keyboard sounds (Holy Pandas) on every keystroke.
+Keyboard typing sound feedback for [Hammerspoon](https://www.hammerspoon.org/).  
+Plays mechanical keyboard sounds on every keystroke, with a menu bar icon for easy control.
+
+## Features
+
+- **Menu bar icon** `⌨` — toggle on/off, switch sound packs, and adjust volume without any hotkeys
+- **Multiple sound packs** — 5 built-in packs from [Mechvibes](https://github.com/hainguyents13/mechvibes)
+- **Volume control** — adjust in 10% steps via menu or hotkeys, persisted across restarts
+- **Key-repeat prevention** — long-press plays the sound only once
+
+## Sound Packs
+
+| Pack | Description |
+|---|---|
+| holy-pandas | Holy Pandas — tactile thocky sound |
+| cream-travel | Cream linear — smooth and deep |
+| mxblack-travel | Cherry MX Black — heavy linear |
+| mxbrown-travel | Cherry MX Brown — tactile bump |
+| turquoise | Turquoise — crisp typing sound |
 
 ## Installation
 
@@ -19,13 +36,16 @@ spoon.Tomonari:start()
 ```
 
 <details>
-<summary>Toggle hotkey (optional)</summary>
+<summary>With hotkeys (optional)</summary>
 
 ```lua
 hs.loadSpoon("Tomonari")
 spoon.Tomonari:start()
 spoon.Tomonari:bindHotkeys({
-    toggle = { { "ctrl", "alt", "cmd", "shift" }, "k" },
+    toggle     = { { "ctrl", "alt", "cmd", "shift" }, "k" },
+    selectPack = { { "ctrl", "alt", "cmd", "shift" }, "p" },
+    volumeUp   = { { "ctrl", "alt", "cmd", "shift" }, "=" },
+    volumeDown = { { "ctrl", "alt", "cmd", "shift" }, "-" },
 })
 ```
 
@@ -55,7 +75,7 @@ spoon.SpoonInstall:andUse("Tomonari", {
 
 ## Credits
 
-Sound pack: [Mechvibes](https://github.com/hainguyents13/mechvibes) (MIT License)
+Sound packs: [Mechvibes](https://github.com/hainguyents13/mechvibes) (MIT License)
 
 ## Version Management
 
