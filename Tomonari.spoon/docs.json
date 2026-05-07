@@ -1,0 +1,51 @@
+[
+  {
+    "Constant": [],
+    "Constructor": [],
+    "Deprecated": [],
+    "Field": [],
+    "Function": [],
+    "Method": [
+      {
+        "def": "Tomonari:start()",
+        "desc": "Load sounds and start the eventtap.",
+        "doc": "Load sounds and start the eventtap.\n\nReturns:\n * The Tomonari object",
+        "name": "start",
+        "parameters": [],
+        "returns": ["* The Tomonari object"],
+        "signature": "Tomonari:start()",
+        "stripped_doc": "",
+        "type": "Method"
+      },
+      {
+        "def": "Tomonari:stop()",
+        "desc": "Stop the eventtap.",
+        "doc": "Stop the eventtap.\n\nReturns:\n * The Tomonari object",
+        "name": "stop",
+        "parameters": [],
+        "returns": ["* The Tomonari object"],
+        "signature": "Tomonari:stop()",
+        "stripped_doc": "",
+        "type": "Method"
+      },
+      {
+        "def": "Tomonari:bindHotkeys(map)",
+        "desc": "Bind hotkeys for toggling sound on/off.",
+        "doc": "Bind hotkeys for toggling sound on/off.\n\nParameters:\n * map - A table with optional key `toggle` = {mods, key}\n\nReturns:\n * The Tomonari object",
+        "name": "bindHotkeys",
+        "parameters": ["* map - Table with optional key `toggle` = {mods, key}"],
+        "returns": ["* The Tomonari object"],
+        "signature": "Tomonari:bindHotkeys(map)",
+        "stripped_doc": "",
+        "type": "Method"
+      }
+    ],
+    "Variable": [],
+    "desc": "Keyboard typing sound feedback for Hammerspoon",
+    "doc": "Keyboard typing sound feedback for Hammerspoon. Plays mechanical keyboard sounds on every keystroke.",
+    "items": [],
+    "name": "Tomonari",
+    "plist": [],
+    "type": "spoon"
+  }
+]
