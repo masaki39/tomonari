@@ -26,16 +26,16 @@ local SPECIAL_KEYCODES = { [49] = "SPACE", [36] = "ENTER", [51] = "BACKSPACE" }
 function obj:_discoverPacks()
 	self._packs = {}
 	local soundsDir = _spoonDir .. "/sounds/"
-	local iter = hs.fs.dir(soundsDir)
-	if not iter then return end
-	for name in iter do
-		if name ~= "." and name ~= ".." then
-			local attrs = hs.fs.attributes(soundsDir .. name)
-			if attrs and attrs.mode == "directory" then
-				self._packs[name] = soundsDir .. name
+	pcall(function()
+		for name in hs.fs.dir(soundsDir) do
+			if name ~= "." and name ~= ".." then
+				local attrs = hs.fs.attributes(soundsDir .. name)
+				if attrs and attrs.mode == "directory" then
+					self._packs[name] = soundsDir .. name
+				end
 			end
 		end
-	end
+	end)
 end
 
 function obj:_loadPackSounds(packDir)
