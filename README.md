@@ -6,7 +6,7 @@ Plays mechanical keyboard sounds on every keystroke, with a menu bar icon for ea
 ## Features
 
 - **Menu bar icon** `⌨` — toggle on/off, switch sound packs, and adjust volume without any hotkeys
-- **Multiple sound packs** — 5 built-in packs from [Mechvibes](https://github.com/hainguyents13/mechvibes)
+- **Multiple sound packs** — 18 built-in packs from [Mechvibes](https://github.com/hainguyents13/mechvibes)
 - **Volume control** — adjust in 10% steps via menu or hotkeys, persisted across restarts
 - **Key-repeat prevention** — long-press plays the sound only once
 
@@ -14,10 +14,23 @@ Plays mechanical keyboard sounds on every keystroke, with a menu bar icon for ea
 
 | Pack | Description |
 |---|---|
-| holy-pandas | Holy Pandas — tactile thocky sound |
+| cherrymx-black-abs | Cherry MX Black + ABS keycaps — heavy linear |
+| cherrymx-black-pbt | Cherry MX Black + PBT keycaps — heavy linear |
+| cherrymx-blue-abs | Cherry MX Blue + ABS keycaps — clicky |
+| cherrymx-blue-pbt | Cherry MX Blue + PBT keycaps — clicky |
+| cherrymx-brown-abs | Cherry MX Brown + ABS keycaps — tactile bump |
+| cherrymx-brown-pbt | Cherry MX Brown + PBT keycaps — tactile bump |
+| cherrymx-red-abs | Cherry MX Red + ABS keycaps — light linear |
+| cherrymx-red-pbt | Cherry MX Red + PBT keycaps — light linear |
 | cream-travel | Cream linear — smooth and deep |
+| eg-crystal-purple | EG Crystal Purple — smooth linear |
+| eg-oreo | EG Oreo — tactile |
+| holy-pandas | Holy Pandas — tactile thocky sound |
 | mxblack-travel | Cherry MX Black — heavy linear |
+| mxblue-travel | Cherry MX Blue — clicky |
 | mxbrown-travel | Cherry MX Brown — tactile bump |
+| nk-cream | NK Cream — smooth buttery linear |
+| topre-purple-hybrid-pbt | Topre Purple Hybrid PBT — electrocapacitive thock |
 | turquoise | Turquoise — crisp typing sound |
 
 ## Installation
