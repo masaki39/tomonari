@@ -1,4 +1,4 @@
-# Tomonari.spoon
+# Tomonari(共鳴り).spoon
 
 Keyboard typing sound feedback for [Hammerspoon](https://www.hammerspoon.org/).  
 Plays mechanical keyboard sounds on every keystroke, with a menu bar icon for easy control.
