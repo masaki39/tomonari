@@ -9,6 +9,18 @@ Plays mechanical keyboard sounds on every keystroke, with a menu bar icon for ea
 - **Multiple sound packs** — 18 built-in packs from [Mechvibes](https://github.com/hainguyents13/mechvibes)
 - **Volume control** — adjust in 10% steps via menu or hotkeys, persisted across restarts
 - **Key-repeat prevention** — long-press plays the sound only once
+- **Keystroke counter** — optional; tracks daily key counts for 30 days, shown in the menu bar menu
+
+## Keystroke Counter
+
+Enable via the menu bar: click `⌨` → **Count Keystrokes**.
+
+When enabled, the menu shows:
+
+- **Today: N keys** — keystrokes typed today
+- **30-day total: N keys** — cumulative count over the last 30 days
+
+Data is stored in Hammerspoon's preferences (`~/Library/Preferences/org.hammerspoon.Hammerspoon.plist`) and automatically pruned to the last 30 days.
 
 ## Sound Packs
 

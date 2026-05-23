@@ -19,8 +19,42 @@ obj._currentPackName = nil
 obj._currentSounds   = nil
 obj._volume          = 1.0
 obj._pressedKeys     = {}
+obj._statsEnabled    = false
+obj._stats           = {}
+obj._statsDirty      = 0
 
 local SPECIAL_KEYCODES = { [49] = "SPACE", [36] = "ENTER", [51] = "BACKSPACE" }
+local STATS_FLUSH = 50
+local STATS_DAYS  = 30
+
+function obj:_pruneStats()
+	local cutoff = os.date("%Y-%m-%d", os.time() - STATS_DAYS * 86400)
+	for date in pairs(self._stats) do
+		if date < cutoff then self._stats[date] = nil end
+	end
+end
+
+function obj:_loadStats()
+	local data = hs.settings.get("Tomonari.stats")
+	if type(data) == "table" then self._stats = data end
+	self:_pruneStats()
+end
+
+function obj:_saveStats()
+	self:_pruneStats()
+	hs.settings.set("Tomonari.stats", self._stats)
+	self._statsDirty = 0
+end
+
+function obj:_formatCount(n)
+	return tostring(n):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+end
+
+function obj:_totalStats()
+	local t = 0
+	for _, v in pairs(self._stats) do t = t + v end
+	return t
+end
 
 function obj:_discoverPacks()
 	self._packs = {}
@@ -120,6 +154,30 @@ function obj:_buildMenu()
 			title = "Volume -10%",
 			fn    = function() self:setVolume(self._volume - 0.1) end,
 		},
+		{ title = "-" },
+		{
+			title   = "Count Keystrokes",
+			fn      = function()
+				self._statsEnabled = not self._statsEnabled
+				hs.settings.set("Tomonari.statsEnabled", self._statsEnabled)
+				if self._statsEnabled then
+					self:_loadStats()
+				elseif self._statsDirty > 0 then
+					self:_saveStats()
+				end
+			end,
+			checked = self._statsEnabled,
+		},
+		table.unpack(self._statsEnabled and {
+			{
+				title    = string.format("Today: %s keys", self:_formatCount(self._stats[os.date("%Y-%m-%d")] or 0)),
+				disabled = true,
+			},
+			{
+				title    = string.format("30-day total: %s keys", self:_formatCount(self:_totalStats())),
+				disabled = true,
+			},
+		} or {}),
 	}
 end
 
@@ -139,10 +197,12 @@ end
 
 function obj:init()
 	self:_discoverPacks()
-	self._volume = hs.settings.get("Tomonari.volume") or 1.0
-	local saved  = hs.settings.get("Tomonari.pack")
-	local pack   = (saved and self._packs[saved]) and saved or next(self._packs)
+	self._volume       = hs.settings.get("Tomonari.volume") or 1.0
+	self._statsEnabled = hs.settings.get("Tomonari.statsEnabled") or false
+	local saved = hs.settings.get("Tomonari.pack")
+	local pack  = (saved and self._packs[saved]) and saved or next(self._packs)
 	if pack then self:_activatePack(pack) end
+	if self._statsEnabled then self:_loadStats() end
 end
 
 function obj:start()
@@ -168,6 +228,12 @@ function obj:start()
 		local sound = self._currentSounds.special[kc]
 		              or self._currentSounds.generics[math.random(#self._currentSounds.generics)]
 		self:_play(sound)
+		if self._statsEnabled then
+			local today = os.date("%Y-%m-%d")
+			self._stats[today] = (self._stats[today] or 0) + 1
+			self._statsDirty = self._statsDirty + 1
+			if self._statsDirty >= STATS_FLUSH then self:_saveStats() end
+		end
 		return false
 	end)
 	self._tap:start()
@@ -175,6 +241,7 @@ function obj:start()
 end
 
 function obj:stop()
+	if self._statsEnabled and self._statsDirty > 0 then self:_saveStats() end
 	if self._tap then
 		self._tap:stop()
 		self._tap = nil
