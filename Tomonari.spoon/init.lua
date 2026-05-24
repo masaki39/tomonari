@@ -19,6 +19,7 @@ obj._currentPackName = nil
 obj._currentSounds   = nil
 obj._volume          = 1.0
 obj._pressedKeys     = {}
+obj._hotkeys         = {}
 obj._statsEnabled    = false
 obj._stats           = {}
 obj._statsDirty      = 0
@@ -188,7 +189,10 @@ function obj:selectPack()
 		table.insert(choices, { text = name .. mark, subText = self._packs[name], packName = name })
 	end
 	table.sort(choices, function(a, b) return a.text < b.text end)
-	local chooser = hs.chooser.new(function(choice)
+	local chooser
+	chooser = hs.chooser.new(function(choice)
+		chooser:delete()
+		chooser = nil
 		if choice then self:_activatePack(choice.packName) end
 	end)
 	chooser:choices(choices)
@@ -247,14 +251,22 @@ function obj:stop()
 		self._tap = nil
 	end
 	self._pressedKeys = {}
+	for _, hk in ipairs(self._hotkeys) do hk:delete() end
+	self._hotkeys = {}
+	if self._menubar then
+		self._menubar:delete()
+		self._menubar = nil
+	end
 	return self
 end
 
 -- map: { toggle, selectPack, volumeUp, volumeDown } = { mods, key }
 function obj:bindHotkeys(map)
+	for _, hk in ipairs(self._hotkeys) do hk:delete() end
+	self._hotkeys = {}
 	if map.toggle then
 		local mods, key = map.toggle[1], map.toggle[2]
-		hs.hotkey.bind(mods, key, function()
+		table.insert(self._hotkeys, hs.hotkey.bind(mods, key, function()
 			if self._tap and self._tap:isEnabled() then
 				self:stop()
 				hs.alert("Tomonari: OFF")
@@ -262,19 +274,19 @@ function obj:bindHotkeys(map)
 				self:start()
 				hs.alert("Tomonari: ON")
 			end
-		end)
+		end))
 	end
 	if map.selectPack then
 		local mods, key = map.selectPack[1], map.selectPack[2]
-		hs.hotkey.bind(mods, key, function() self:selectPack() end)
+		table.insert(self._hotkeys, hs.hotkey.bind(mods, key, function() self:selectPack() end))
 	end
 	if map.volumeUp then
 		local mods, key = map.volumeUp[1], map.volumeUp[2]
-		hs.hotkey.bind(mods, key, function() self:setVolume(self._volume + 0.1) end)
+		table.insert(self._hotkeys, hs.hotkey.bind(mods, key, function() self:setVolume(self._volume + 0.1) end))
 	end
 	if map.volumeDown then
 		local mods, key = map.volumeDown[1], map.volumeDown[2]
-		hs.hotkey.bind(mods, key, function() self:setVolume(self._volume - 0.1) end)
+		table.insert(self._hotkeys, hs.hotkey.bind(mods, key, function() self:setVolume(self._volume - 0.1) end))
 	end
 	return self
 end
