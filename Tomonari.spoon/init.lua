@@ -299,15 +299,18 @@ end
 
 function obj:stop()
 	if self._statsEnabled and self._statsDirty > 0 then
-		pcall(function()
-			self:_saveStats()
-		end)
+		self:_saveStats()
 	end
 	if self._tap then
 		self._tap:stop()
 		self._tap = nil
 	end
 	self._pressedKeys = {}
+	self:_clearHotkeys()
+	if self._menubar then
+		self._menubar:delete()
+		self._menubar = nil
+	end
 	return self
 end
 
@@ -318,6 +321,8 @@ function obj:bindHotkeys(map)
 		local hk = hs.hotkey.bind(mods, key, fn)
 		if hk then
 			table.insert(self._hotkeys, hk)
+		else
+			hs.alert("Tomonari: failed to bind key " .. tostring(key))
 		end
 	end
 	if map.toggle then
