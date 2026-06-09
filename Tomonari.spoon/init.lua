@@ -8,7 +8,7 @@ local obj = {}
 obj.__index = obj
 
 obj.name = "Tomonari"
-obj.version = "0.0.9"
+obj.version = "0.0.10"
 obj.author = "masaki39"
 obj.license = "MIT"
 
