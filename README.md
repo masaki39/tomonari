@@ -5,15 +5,24 @@ Plays mechanical keyboard sounds on every keystroke, with a menu bar icon for ea
 
 ## Features
 
-- **Menu bar icon** `⌨` — toggle on/off, switch sound packs, and adjust volume without any hotkeys
+- **Menu bar icon** — toggle on/off, switch sound packs, and adjust volume without any hotkeys; icon is configurable
 - **Multiple sound packs** — 18 built-in packs from [Mechvibes](https://github.com/hainguyents13/mechvibes)
 - **Volume control** — adjust in 10% steps via menu or hotkeys, persisted across restarts
 - **Key-repeat prevention** — long-press plays the sound only once
-- **Keystroke counter** — optional; tracks daily key counts for 30 days, shown in the menu bar menu
+- **Keystroke counter** — runs independently of sound; tracks daily key counts for 30 days
+
+## Customization
+
+Change the menu bar icon before calling `start()`:
+
+```lua
+spoon.Tomonari.menubarIcon = "⌨️"
+spoon.Tomonari:start()
+```
 
 ## Keystroke Counter
 
-Enable via the menu bar: click `⌨` → **Count Keystrokes**.
+Enable via the menu bar → **Count Keystrokes**. Works even when sound is disabled.
 
 When enabled, the menu shows:
 

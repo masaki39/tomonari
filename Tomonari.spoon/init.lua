@@ -20,9 +20,12 @@ obj._currentSounds = nil
 obj._volume = 1.0
 obj._pressedKeys = {}
 obj._hotkeys = {}
+obj._soundEnabled = false
 obj._statsEnabled = false
 obj._stats = {}
 obj._statsDirty = 0
+
+obj.menubarIcon = "🎹"
 
 local SPECIAL_KEYCODES = { [49] = "SPACE", [36] = "ENTER", [51] = "BACKSPACE" }
 local STATS_FLUSH = 50
@@ -133,7 +136,7 @@ function obj:setVolume(vol)
 end
 
 function obj:_buildMenu()
-	local enabled = self._tap and self._tap:isEnabled()
+	local enabled = self._soundEnabled
 
 	local packItems = {}
 	local names = {}
@@ -156,7 +159,7 @@ function obj:_buildMenu()
 		{
 			title = "Enabled",
 			fn = function()
-				if self._tap and self._tap:isEnabled() then
+				if self._soundEnabled then
 					self:stop()
 				else
 					self:start()
@@ -191,8 +194,12 @@ function obj:_buildMenu()
 				hs.settings.set("Tomonari.statsEnabled", self._statsEnabled)
 				if self._statsEnabled then
 					self:_loadStats()
-				elseif self._statsDirty > 0 then
-					self:_saveStats()
+					self:_ensureTap()
+				else
+					if self._statsDirty > 0 then
+						self:_saveStats()
+					end
+					self:_maybeStopTap()
 				end
 			end,
 			checked = self._statsEnabled,
@@ -244,18 +251,12 @@ function obj:init()
 	end
 	if self._statsEnabled then
 		self:_loadStats()
+		self:_ensureTap()
 	end
 end
 
-function obj:start()
-	if not self._menubar then
-		self._menubar = hs.menubar.new()
-		self._menubar:setTitle("🎹")
-		self._menubar:setMenu(function()
-			return self:_buildMenu()
-		end)
-	end
-
+function obj:_ensureTap()
+	if self._tap then return end
 	self._pressedKeys = {}
 	self._tap = hs.eventtap.new({
 		hs.eventtap.event.types.keyDown,
@@ -270,12 +271,11 @@ function obj:start()
 			return false
 		end
 		self._pressedKeys[kc] = true
-		if not self._currentSounds then
-			return false
+		if self._soundEnabled and self._currentSounds then
+			local sound = self._currentSounds.special[kc]
+				or self._currentSounds.generics[math.random(#self._currentSounds.generics)]
+			self:_play(sound)
 		end
-		local sound = self._currentSounds.special[kc]
-			or self._currentSounds.generics[math.random(#self._currentSounds.generics)]
-		self:_play(sound)
 		if self._statsEnabled then
 			local today = os.date("%Y-%m-%d")
 			self._stats[today] = (self._stats[today] or 0) + 1
@@ -287,6 +287,28 @@ function obj:start()
 		return false
 	end)
 	self._tap:start()
+end
+
+function obj:_maybeStopTap()
+	if not self._soundEnabled and not self._statsEnabled then
+		if self._tap then
+			self._tap:stop()
+			self._tap = nil
+		end
+		self._pressedKeys = {}
+	end
+end
+
+function obj:start()
+	if not self._menubar then
+		self._menubar = hs.menubar.new()
+		self._menubar:setTitle(self.menubarIcon)
+		self._menubar:setMenu(function()
+			return self:_buildMenu()
+		end)
+	end
+	self._soundEnabled = true
+	self:_ensureTap()
 	return self
 end
 
@@ -301,16 +323,9 @@ function obj:stop()
 	if self._statsEnabled and self._statsDirty > 0 then
 		self:_saveStats()
 	end
-	if self._tap then
-		self._tap:stop()
-		self._tap = nil
-	end
-	self._pressedKeys = {}
+	self._soundEnabled = false
+	self:_maybeStopTap()
 	self:_clearHotkeys()
-	if self._menubar then
-		self._menubar:delete()
-		self._menubar = nil
-	end
 	return self
 end
 
@@ -327,7 +342,7 @@ function obj:bindHotkeys(map)
 	end
 	if map.toggle then
 		bind(map.toggle[1], map.toggle[2], function()
-			if self._tap and self._tap:isEnabled() then
+			if self._soundEnabled then
 				self:stop()
 				hs.alert("Tomonari: OFF")
 			else
