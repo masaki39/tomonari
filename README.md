@@ -1,5 +1,7 @@
 # Tomonari(共鳴り).spoon
 
+[![Latest Release](https://img.shields.io/github/v/release/masaki39/tomonari)](https://github.com/masaki39/tomonari/releases/latest)
+
 Keyboard typing sound feedback for [Hammerspoon](https://www.hammerspoon.org/).  
 Plays mechanical keyboard sounds on every keystroke, with a menu bar icon for easy control.
 
@@ -10,6 +12,7 @@ Plays mechanical keyboard sounds on every keystroke, with a menu bar icon for ea
 - **Volume control** — adjust in 10% steps via menu or hotkeys, persisted across restarts
 - **Key-repeat prevention** — long-press plays the sound only once
 - **Keystroke counter** — runs independently of sound; tracks daily key counts for 30 days
+- **Hotkey menu** — full-featured chooser menu accessible via hotkey, even without the menu bar icon
 
 ## Customization
 
@@ -19,6 +22,18 @@ Change the menu bar icon before calling `start()`:
 spoon.Tomonari.menubarIcon = "⌨️"
 spoon.Tomonari:start()
 ```
+
+Hide the menu bar icon entirely and use a hotkey instead:
+
+```lua
+spoon.Tomonari.menubarHidden = true
+spoon.Tomonari:start()
+spoon.Tomonari:bindHotkeys({
+    showMenu = { { "ctrl", "option" }, "t" },
+})
+```
+
+The `menubarHidden` setting is persisted — once toggled via the chooser menu, the state survives restarts.
 
 ## Keystroke Counter
 
@@ -62,7 +77,7 @@ Install [Hammerspoon](https://www.hammerspoon.org/) first if you haven't:
 brew install --cask hammerspoon
 ```
 
-Download [Tomonari.spoon.zip](https://github.com/masaki39/tomonari/raw/main/Spoons/Tomonari.spoon.zip), open it to install, and add to `~/.hammerspoon/init.lua`:
+Download [Tomonari.spoon.zip](https://github.com/masaki39/tomonari/releases/latest/download/Tomonari.spoon.zip), open it to install, and add to `~/.hammerspoon/init.lua`:
 
 ```lua
 hs.loadSpoon("Tomonari")
@@ -80,8 +95,17 @@ spoon.Tomonari:bindHotkeys({
     selectPack = { { "ctrl", "alt", "cmd", "shift" }, "p" },
     volumeUp   = { { "ctrl", "alt", "cmd", "shift" }, "=" },
     volumeDown = { { "ctrl", "alt", "cmd", "shift" }, "-" },
+    showMenu   = { { "ctrl", "option" }, "t" },
 })
 ```
+
+| Key | Action |
+|---|---|
+| `toggle` | Enable / disable sound |
+| `selectPack` | Open pack chooser |
+| `volumeUp` | Volume +10% |
+| `volumeDown` | Volume -10% |
+| `showMenu` | Open full chooser menu |
 
 </details>
 
@@ -101,6 +125,13 @@ spoon.SpoonInstall.repos.tomonari = {
 }
 spoon.SpoonInstall:andUse("Tomonari", {
     repo = "tomonari",
+    config = {
+        menubarIcon   = "⌨️",
+        menubarHidden = true,   -- hide menu bar icon, use hotkey instead
+    },
+    hotkeys = {
+        showMenu = { { "ctrl", "option" }, "t" },
+    },
     start = true,
 })
 ```

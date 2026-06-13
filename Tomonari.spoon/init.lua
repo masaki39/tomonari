@@ -7,365 +7,76 @@ end)()
 local obj = {}
 obj.__index = obj
 
-obj.name = "Tomonari"
+obj.name    = "Tomonari"
 obj.version = "0.0.10"
-obj.author = "masaki39"
+obj.author  = "masaki39"
 obj.license = "MIT"
 
-obj._tap = nil
-obj._menubar = nil
-obj._packs = {}
+-- Public config
+obj.menubarIcon   = "🎹"
+obj.menubarHidden = false
+
+-- Private state
+obj._tap             = nil
+obj._menubar         = nil
+obj._packs           = {}
 obj._currentPackName = nil
-obj._currentSounds = nil
-obj._volume = 1.0
-obj._pressedKeys = {}
-obj._hotkeys = {}
-obj._soundEnabled = false
-obj._statsEnabled = false
-obj._stats = {}
-obj._statsDirty = 0
+obj._currentSounds   = nil
+obj._volume          = 1.0
+obj._pressedKeys     = {}
+obj._hotkeys         = {}
+obj._soundEnabled    = false
+obj._statsEnabled    = false
+obj._stats           = {}
+obj._statsDirty      = 0
 
-obj.menubarIcon = "🎹"
-
-local SPECIAL_KEYCODES = { [49] = "SPACE", [36] = "ENTER", [51] = "BACKSPACE" }
-local STATS_FLUSH = 50
-local STATS_DAYS = 30
-
-function obj:_pruneStats()
-	local cutoff = os.date("%Y-%m-%d", os.time() - STATS_DAYS * 86400)
-	for date in pairs(self._stats) do
-		if date < cutoff then
-			self._stats[date] = nil
-		end
-	end
+local function loadModule(name)
+	local chunk, err = loadfile(_spoonDir .. "/" .. name .. ".lua")
+	if not chunk then error("Tomonari: " .. tostring(err)) end
+	chunk(obj, _spoonDir)
 end
 
-function obj:_loadStats()
-	local data = hs.settings.get("Tomonari.stats")
-	if type(data) == "table" then
-		self._stats = data
-	end
-	self:_pruneStats()
-end
+loadModule("sound")
+loadModule("stats")
+loadModule("tap")
+loadModule("menubar")
+loadModule("chooser")
+loadModule("hotkeys")
 
-function obj:_saveStats()
-	self:_pruneStats()
-	hs.settings.set("Tomonari.stats", self._stats)
-	self._statsDirty = 0
-end
+-- ── Lifecycle ────────────────────────────────────────────────────────────────
 
-function obj:_formatCount(n)
-	return tostring(n):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
-end
-
-function obj:_totalStats()
-	local t = 0
-	for _, v in pairs(self._stats) do
-		t = t + v
-	end
-	return t
-end
-
-function obj:_discoverPacks()
-	self._packs = {}
-	local soundsDir = _spoonDir .. "/sounds/"
-	pcall(function()
-		for name in hs.fs.dir(soundsDir) do
-			if name ~= "." and name ~= ".." then
-				local attrs = hs.fs.attributes(soundsDir .. name)
-				if attrs and attrs.mode == "directory" then
-					self._packs[name] = soundsDir .. name
-				end
-			end
-		end
-	end)
-end
-
-function obj:_loadPackSounds(packDir)
-	local sounds = { generics = {}, special = {} }
-	for i = 0, 9 do
-		local s = hs.sound.getByFile(packDir .. "/GENERIC_R" .. i .. ".mp3")
-		if s then
-			table.insert(sounds.generics, s)
-		end
-	end
-	for kc, name in pairs(SPECIAL_KEYCODES) do
-		local s = hs.sound.getByFile(packDir .. "/" .. name .. ".mp3")
-		if s then
-			sounds.special[kc] = s
-		end
-	end
-	return sounds
-end
-
-function obj:_applyVolume()
-	if not self._currentSounds then
-		return
-	end
-	for _, s in ipairs(self._currentSounds.generics) do
-		s:volume(self._volume)
-	end
-	for _, s in pairs(self._currentSounds.special) do
-		s:volume(self._volume)
-	end
-end
-
-function obj:_activatePack(packName)
-	local packDir = self._packs[packName]
-	if not packDir then
-		return
-	end
-	self._currentPackName = packName
-	self._currentSounds = self:_loadPackSounds(packDir)
-	self:_applyVolume()
-	hs.settings.set("Tomonari.pack", packName)
-	hs.alert("Tomonari: " .. packName)
-end
-
-function obj:_play(sound)
-	if sound then
-		sound:stop():play()
-	end
-end
-
-function obj:setVolume(vol)
-	self._volume = math.max(0.0, math.min(1.0, vol))
-	hs.settings.set("Tomonari.volume", self._volume)
-	self:_applyVolume()
-	hs.alert(string.format("Tomonari: Volume %d%%", math.floor(self._volume * 100 + 0.5)))
-end
-
-function obj:_buildMenu()
-	local enabled = self._soundEnabled
-
-	local packItems = {}
-	local names = {}
-	for name in pairs(self._packs) do
-		table.insert(names, name)
-	end
-	table.sort(names)
-	for _, name in ipairs(names) do
-		local n = name
-		table.insert(packItems, {
-			title = n,
-			fn = function()
-				self:_activatePack(n)
-			end,
-			checked = n == self._currentPackName,
-		})
-	end
-
-	return {
-		{
-			title = "Enabled",
-			fn = function()
-				if self._soundEnabled then
-					self:stop()
-				else
-					self:start()
-				end
-			end,
-			checked = enabled,
-		},
-		{ title = "-" },
-		{ title = "Sound Pack", menu = packItems },
-		{ title = "-" },
-		{
-			title = string.format("Volume: %d%%", math.floor(self._volume * 100 + 0.5)),
-			disabled = true,
-		},
-		{
-			title = "Volume +10%",
-			fn = function()
-				self:setVolume(self._volume + 0.1)
-			end,
-		},
-		{
-			title = "Volume -10%",
-			fn = function()
-				self:setVolume(self._volume - 0.1)
-			end,
-		},
-		{ title = "-" },
-		{
-			title = "Count Keystrokes",
-			fn = function()
-				self._statsEnabled = not self._statsEnabled
-				hs.settings.set("Tomonari.statsEnabled", self._statsEnabled)
-				if self._statsEnabled then
-					self:_loadStats()
-					self:_ensureTap()
-				else
-					if self._statsDirty > 0 then
-						self:_saveStats()
-					end
-					self:_maybeStopTap()
-				end
-			end,
-			checked = self._statsEnabled,
-		},
-		table.unpack(self._statsEnabled and {
-			{
-				title = string.format("Today: %s keys", self:_formatCount(self._stats[os.date("%Y-%m-%d")] or 0)),
-				disabled = true,
-			},
-			{
-				title = string.format("30-day total: %s keys", self:_formatCount(self:_totalStats())),
-				disabled = true,
-			},
-		} or {}),
-	}
-end
-
-function obj:selectPack()
-	local choices = {}
-	for name in pairs(self._packs) do
-		local mark = name == self._currentPackName and " [current]" or ""
-		table.insert(choices, { text = name .. mark, subText = self._packs[name], packName = name })
-	end
-	table.sort(choices, function(a, b)
-		return a.text < b.text
-	end)
-	local chooser
-	chooser = hs.chooser.new(function(choice)
-		if chooser then
-			chooser:delete()
-			chooser = nil
-		end
-		if choice then
-			self:_activatePack(choice.packName)
-		end
-	end)
-	chooser:choices(choices)
-	chooser:show()
+local function readSetting(key, default)
+	local v = hs.settings.get(key)
+	return v ~= nil and v or default
 end
 
 function obj:init()
 	self:_discoverPacks()
-	self._volume = hs.settings.get("Tomonari.volume") or 1.0
-	self._statsEnabled = hs.settings.get("Tomonari.statsEnabled") or false
+	self._volume       = readSetting("Tomonari.volume",       self._volume)
+	self._statsEnabled = readSetting("Tomonari.statsEnabled", self._statsEnabled)
+	self.menubarHidden = readSetting("Tomonari.menubarHidden", self.menubarHidden)
 	local saved = hs.settings.get("Tomonari.pack")
-	local pack = (saved and self._packs[saved]) and saved or next(self._packs)
-	if pack then
-		self:_activatePack(pack)
-	end
-	if self._statsEnabled then
-		self:_loadStats()
-		self:_ensureTap()
-	end
-end
-
-function obj:_ensureTap()
-	if self._tap then return end
-	self._pressedKeys = {}
-	self._tap = hs.eventtap.new({
-		hs.eventtap.event.types.keyDown,
-		hs.eventtap.event.types.keyUp,
-	}, function(event)
-		local kc = event:getKeyCode()
-		if event:getType() == hs.eventtap.event.types.keyUp then
-			self._pressedKeys[kc] = nil
-			return false
-		end
-		if self._pressedKeys[kc] then
-			return false
-		end
-		self._pressedKeys[kc] = true
-		if self._soundEnabled and self._currentSounds then
-			local sound = self._currentSounds.special[kc]
-				or self._currentSounds.generics[math.random(#self._currentSounds.generics)]
-			self:_play(sound)
-		end
-		if self._statsEnabled then
-			local today = os.date("%Y-%m-%d")
-			self._stats[today] = (self._stats[today] or 0) + 1
-			self._statsDirty = self._statsDirty + 1
-			if self._statsDirty >= STATS_FLUSH then
-				self:_saveStats()
-			end
-		end
-		return false
-	end)
-	self._tap:start()
-end
-
-function obj:_maybeStopTap()
-	if not self._soundEnabled and not self._statsEnabled then
-		if self._tap then
-			self._tap:stop()
-			self._tap = nil
-		end
-		self._pressedKeys = {}
-	end
+	local pack  = (saved and self._packs[saved]) and saved or next(self._packs)
+	if pack then self:_activatePack(pack) end
+	if self._statsEnabled then self:_loadStats(); self:_ensureTap() end
 end
 
 function obj:start()
-	if not self._menubar then
+	if not self.menubarHidden and not self._menubar then
 		self._menubar = hs.menubar.new()
 		self._menubar:setTitle(self.menubarIcon)
-		self._menubar:setMenu(function()
-			return self:_buildMenu()
-		end)
+		self._menubar:setMenu(function() return self:_buildMenu() end)
 	end
 	self._soundEnabled = true
 	self:_ensureTap()
 	return self
 end
 
-function obj:_clearHotkeys()
-	for _, hk in ipairs(self._hotkeys) do
-		hk:delete()
-	end
-	self._hotkeys = {}
-end
-
 function obj:stop()
-	if self._statsEnabled and self._statsDirty > 0 then
-		self:_saveStats()
-	end
+	if self._statsEnabled and self._statsDirty > 0 then self:_saveStats() end
 	self._soundEnabled = false
 	self:_maybeStopTap()
 	self:_clearHotkeys()
-	return self
-end
-
--- map: { toggle, selectPack, volumeUp, volumeDown } = { mods, key }
-function obj:bindHotkeys(map)
-	self:_clearHotkeys()
-	local function bind(mods, key, fn)
-		local hk = hs.hotkey.bind(mods, key, fn)
-		if hk then
-			table.insert(self._hotkeys, hk)
-		else
-			hs.alert("Tomonari: failed to bind key " .. tostring(key))
-		end
-	end
-	if map.toggle then
-		bind(map.toggle[1], map.toggle[2], function()
-			if self._soundEnabled then
-				self:stop()
-				hs.alert("Tomonari: OFF")
-			else
-				self:start()
-				hs.alert("Tomonari: ON")
-			end
-		end)
-	end
-	if map.selectPack then
-		bind(map.selectPack[1], map.selectPack[2], function()
-			self:selectPack()
-		end)
-	end
-	if map.volumeUp then
-		bind(map.volumeUp[1], map.volumeUp[2], function()
-			self:setVolume(self._volume + 0.1)
-		end)
-	end
-	if map.volumeDown then
-		bind(map.volumeDown[1], map.volumeDown[2], function()
-			self:setVolume(self._volume - 0.1)
-		end)
-	end
 	return self
 end
 
